@@ -63,13 +63,7 @@ function pomoTask(){
 
   console.log('Index selecionado', index);
   console.log(`Pomodoro for ${taskList[index].description} is now running`);
-  pomoBuffer.push(taskList[index]);
-  setTimeout(()=>{
-    console.log("setTimeoutIn")
-    pomoBuffer[0].pomos+=1;
-    pomoBuffer.shift();
-    writeFileSync('./data.json', JSON.stringify({taskList}));
-  },1000)
+  pomoBuffer.push({task: taskList[index], timeStamp: Date.now() });
 }
 
 function formatTask(task){
@@ -86,6 +80,13 @@ function formatTaskList(taskList){
 
 let exit = false;
 while (!exit){
+  if (pomoBuffer.length > 0){
+    if (Date.now() - pomoBuffer[0].timeStamp > 25*60*1000){
+      const local = pomoBuffer.shift();
+      local.pomos+=1;
+      writeFileSync('./data.json', JSON.stringify({taskList}));
+    }
+  }
   const options = ['add', 'list', 'check', 'remove', 'pomodoro'];
   const index = readlineSync.keyInSelect(options, 'O que vc quer fazer? ');
 
