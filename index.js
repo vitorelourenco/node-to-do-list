@@ -61,7 +61,6 @@ function pomoTask(){
   const options = formatTaskList(taskList);
   const index = readlineSync.keyInSelect(options, 'What todo do you want to have a pomodoro for? ');
 
-  console.log('Index selecionado', index);
   console.log(`Pomodoro for ${taskList[index].description} is now running`);
   pomoBuffer.push({task: taskList[index], timeStamp: Date.now() });
 }
@@ -83,7 +82,7 @@ while (!exit){
   if (pomoBuffer.length > 0){
     if (Date.now() - pomoBuffer[0].timeStamp > 25*60*1000){
       const local = pomoBuffer.shift();
-      local.pomos+=1;
+      local.task.pomos+=1;
       writeFileSync('./data.json', JSON.stringify({taskList}));
     }
   }
