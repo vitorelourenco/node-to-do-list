@@ -4,19 +4,20 @@ function addTask(){
     done: false,
     description: answer
   }
-  tasks.push(task);
+  taskList.push(task);
 }
 
 function listTasks(){
   console.log("===========================");
-  tasks.forEach(task=>console.log(`${task.done?"🟢":"🔴"} ${task.description}` ));
+  taskList.forEach(task=>console.log(formatTask(task)));
   console.log("===========================");
-
 }
 
 function checkTask(){
-  console.log('c');
-
+  var readlineSync = require('readline-sync'),
+    options = formatTaskList(taskList),
+    index = readlineSync.keyInSelect(options, 'What do you want to check/uncheck? ');
+  taskList[index].done = !taskList[index].done;
 }
 
 function removeTask(){
@@ -24,7 +25,15 @@ function removeTask(){
 
 }
 
-const tasks = [];
+function formatTask(task){
+  return(`${task.done?"🟢":"🔴"} ${task.description}`);
+}
+
+function formatTaskList(taskList){
+  return(taskList.map(task=>formatTask(task)));
+}
+
+const taskList = [];
 let exit = false;
 while (!exit){
   var readlineSync = require('readline-sync'),
