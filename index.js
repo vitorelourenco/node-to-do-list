@@ -8,12 +8,20 @@ function addTask(){
 }
 
 function listTasks(){
+  if (taskList.length === 0){
+    console.log("There are no tasks to list");
+    return;
+  } 
   console.log("===========================");
   taskList.forEach(task=>console.log(formatTask(task)));
   console.log("===========================");
 }
 
 function checkTask(){
+  if (taskList.length === 0){
+    console.log("There are no tasks to check");
+    return;
+  } 
   var readlineSync = require('readline-sync'),
     options = formatTaskList(taskList),
     index = readlineSync.keyInSelect(options, 'What do you want to check/uncheck? ');
@@ -21,8 +29,14 @@ function checkTask(){
 }
 
 function removeTask(){
-  console.log('d');
-
+  if (taskList.length === 0){
+    console.log("There are no tasks to remove");
+    return;
+  } 
+  var readlineSync = require('readline-sync'),
+    options = formatTaskList(taskList),
+    index = readlineSync.keyInSelect(options, 'What do you want to remove? ');
+  taskList.splice(index,1);
 }
 
 function formatTask(task){
