@@ -1,15 +1,29 @@
+var fs = require('fs');
+
+if (!fs.existsSync('./data.json')){
+  fs.writeFileSync('./data.json', JSON.stringify({taskList:[]}))
+}
+
+var data = JSON.parse(fs.readFileSync('./data.json'));
+const taskList = data.taskList; 
+
 function addTask(){
+  console.log("===========================");
   const answer = readlineSync.question('What do you want to do?');
   const task = {
     done: false,
     description: answer
   }
   taskList.push(task);
+  fs.writeFileSync('./data.json', JSON.stringify({taskList}))
+  console.log("===========================");
 }
 
 function listTasks(){
+  console.log("===========================");
   if (taskList.length === 0){
     console.log("There are no tasks to list");
+    console.log("===========================");
     return;
   } 
   console.log("===========================");
@@ -18,25 +32,34 @@ function listTasks(){
 }
 
 function checkTask(){
+  console.log("===========================");
   if (taskList.length === 0){
     console.log("There are no tasks to check");
+    console.log("===========================");
     return;
   } 
   var readlineSync = require('readline-sync'),
     options = formatTaskList(taskList),
     index = readlineSync.keyInSelect(options, 'What do you want to check/uncheck? ');
+  
+  if (index===0) return;
+
   taskList[index].done = !taskList[index].done;
+  console.log("===========================");
 }
 
 function removeTask(){
+  console.log("===========================");
   if (taskList.length === 0){
     console.log("There are no tasks to remove");
+    console.log("===========================");
     return;
   } 
   var readlineSync = require('readline-sync'),
     options = formatTaskList(taskList),
     index = readlineSync.keyInSelect(options, 'What do you want to remove? ');
   taskList.splice(index,1);
+  console.log("===========================");
 }
 
 function formatTask(task){
@@ -47,7 +70,6 @@ function formatTaskList(taskList){
   return(taskList.map(task=>formatTask(task)));
 }
 
-const taskList = [];
 let exit = false;
 while (!exit){
   var readlineSync = require('readline-sync'),
