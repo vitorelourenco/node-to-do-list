@@ -1,5 +1,6 @@
 import { existsSync, writeFileSync, readFileSync } from 'fs';
 import readlineSync from 'readline-sync';
+import chalk from 'chalk';
 
 if (!existsSync('./data.json')){
   writeFileSync('./data.json', JSON.stringify({taskList:[]}))
@@ -10,12 +11,13 @@ const taskList = data.taskList;
 const pomoBuffer = [];
 
 function addTask(){
-  const answer = readlineSync.question('What do you want to do?');
+  const answer = readlineSync.question('What to-do would you like to add?');
   const task = {
     done: false,
     description: answer,
     pomos: 0
   }
+  if (answer === "") return;
   taskList.push(task);
   writeFileSync('./data.json', JSON.stringify({taskList}))
 }
@@ -25,17 +27,19 @@ function listTasks(){
     console.log("There are no tasks to list");
     return;
   } 
+  console.log("These are your to-dos:")
   taskList.forEach(task=>console.log(formatTask(task)));
 }
 
 function checkTask(){
   if (taskList.length === 0){
-    console.log("There are no tasks to check");
+    console.log("There are no tasks to check/uncheck");
     return;
   } 
 
   const options = formatTaskList(taskList);
   const index = readlineSync.keyInSelect(options, 'What do you want to check/uncheck? ');
+  
   taskList[index].done = !taskList[index].done;
   writeFileSync('./data.json', JSON.stringify({taskList}));
 }
@@ -48,8 +52,8 @@ function removeTask(){
   const options = formatTaskList(taskList);
   const index = readlineSync.keyInSelect(options, 'What do you want to remove? ');
   
-  taskList.splice(index,1);
-  writeFileSync('./data.json', JSON.stringify({taskList}))
+  if (index>=0) taskList.splice(index,1);
+  writeFileSync('./data.json', JSON.stringify({taskList}));
 }
 
 function pomoTask(){
@@ -59,7 +63,7 @@ function pomoTask(){
   } 
 
   const options = formatTaskList(taskList);
-  const index = readlineSync.keyInSelect(options, 'What todo do you want to have a pomodoro for? ');
+  const index = readlineSync.keyInSelect(options, 'What to-do would you like to start a pomodoro for? ');
 
   console.log(`Pomodoro for ${taskList[index].description} is now running`);
   pomoBuffer.push({task: taskList[index], timeStamp: Date.now() });
@@ -77,17 +81,40 @@ function formatTaskList(taskList){
   return(taskList.map(task=>formatTask(task)));
 }
 
+const colors = {
+  names:["red", "green", "yellow", "blue", "magenta"],
+  i: 0,
+  next(){
+    if (this.i === this.names.length - 1){
+      this.i = 0;
+    } else {
+      this.i = this.i+1;
+    }
+    return this.names[this.i];
+  }
+}
+
+
 let exit = false;
 while (!exit){
+  console.log(chalk[colors.next()]("===================================="));
+  const options = ['add', 'list', 'check', 'remove', 'pomodoro'];
+  const index = readlineSync.keyInSelect(options, 'Pick an action from the list above');
+  
   if (pomoBuffer.length > 0){
-    if (Date.now() - pomoBuffer[0].timeStamp > 25*60*1000){
-      const local = pomoBuffer.shift();
-      local.task.pomos+=1;
+    const timeDif = Date.now() - pomoBuffer[0].timeStamp;
+    if (timeDif > 1000){
+      const ref = pomoBuffer.shift();
+      ref.task.pomos+=1;
+      console.log("Pomodoro for "+ref.task.description+" is done");
       writeFileSync('./data.json', JSON.stringify({taskList}));
+    } else {
+      for (let i=0; i<pomoBuffer.length; i++){
+        console.log(`You have an active pomodoro timer for ${ref.task.description}
+with ${timeDif/1000/60} minutes to go.`)
+      }
     }
   }
-  const options = ['add', 'list', 'check', 'remove', 'pomodoro'];
-  const index = readlineSync.keyInSelect(options, 'O que vc quer fazer? ');
 
   switch (options[index]){
     case "add" : addTask(); break;
