@@ -1,17 +1,32 @@
 import { existsSync, writeFileSync, readFileSync } from 'fs';
 import readlineSync from 'readline-sync';
 import chalk from 'chalk';
+import {spawn} from 'child_process';
 
 if (!existsSync('./data.json')){
   writeFileSync('./data.json', JSON.stringify({taskList:[]}))
 }
 
-const data = JSON.parse(readFileSync('./data.json'));
-const taskList = data.taskList; 
-const pomoBuffer = [];
+console.log(chalk.greenBright("||==========||"));
+console.log(chalk.greenBright("||=TERMINAL=||"))
+console.log(
+  chalk.greenBright("||"),
+  chalk.magenta("T"),
+  chalk.red("O"),
+  chalk.yellow("D"),
+  chalk.blue("O"),
+  chalk.greenBright(" ||")
+);
+console.log(chalk.greenBright("||==========||"));
 
-function addTask(){
+
+function addTask(taskList){
   const answer = readlineSync.question('What to-do would you like to add?');
+  const exists = taskList.reduce((acc,elem)=>acc||elem.description===answer, false)
+  if (exists){
+    console.log('This to-do already exists');
+    return;
+  }
   const task = {
     done: false,
     description: answer,
@@ -22,7 +37,7 @@ function addTask(){
   writeFileSync('./data.json', JSON.stringify({taskList}))
 }
 
-function listTasks(){
+function listTasks(taskList){
   if (taskList.length === 0){
     console.log("There are no tasks to list");
     return;
@@ -31,7 +46,7 @@ function listTasks(){
   taskList.forEach(task=>console.log(formatTask(task)));
 }
 
-function checkTask(){
+function checkTask(taskList){
   if (taskList.length === 0){
     console.log("There are no tasks to check/uncheck");
     return;
@@ -44,7 +59,7 @@ function checkTask(){
   writeFileSync('./data.json', JSON.stringify({taskList}));
 }
 
-function removeTask(){
+function removeTask(taskList){
   if (taskList.length === 0){
     console.log("There are no tasks to remove");
     return;
@@ -56,7 +71,7 @@ function removeTask(){
   writeFileSync('./data.json', JSON.stringify({taskList}));
 }
 
-function pomoTask(){
+function pomoTask(taskList){
   if (taskList.length === 0){
     console.log("There are no tasks to add a pomodoro to");
     return;
@@ -66,7 +81,13 @@ function pomoTask(){
   const index = readlineSync.keyInSelect(options, 'What to-do would you like to start a pomodoro for? ');
 
   console.log(`Pomodoro for ${taskList[index].description} is now running`);
-  pomoBuffer.push({task: taskList[index], timeStamp: Date.now() });
+
+  const child = spawn('node', ['pomo.js', `${taskList[index].description}`], {
+    detached: true,
+    stdio: "inherit"
+  });
+
+  child.unref();
 }
 
 function formatTask(task){
@@ -94,37 +115,22 @@ const colors = {
   }
 }
 
-
 let exit = false;
 while (!exit){
   console.log(chalk[colors.next()]("===================================="));
+
   const options = ['add', 'list', 'check', 'remove', 'pomodoro'];
   const index = readlineSync.keyInSelect(options, 'Pick an action from the list above');
-  
-  if (pomoBuffer.length > 0){
-    const timeDif = Date.now() - pomoBuffer[0].timeStamp;
-    if (timeDif > 1000){
-      const ref = pomoBuffer.shift();
-      ref.task.pomos+=1;
-      console.log("Pomodoro for "+ref.task.description+" is done");
-      writeFileSync('./data.json', JSON.stringify({taskList}));
-    } else {
-      for (let i=0; i<pomoBuffer.length; i++){
-        console.log(`You have an active pomodoro timer for ${ref.task.description}
-with ${timeDif/1000/60} minutes to go.`)
-      }
-    }
-  }
+
+  const data = JSON.parse(readFileSync('./data.json'));
+  const taskList = data.taskList; 
 
   switch (options[index]){
-    case "add" : addTask(); break;
-    case "list" : listTasks(); break;
-    case "check" : checkTask(); break;
-    case "remove" : removeTask(); break;
-    case "pomodoro": pomoTask(); break;
-    default : {
-      writeFileSync('./data.json', JSON.stringify({taskList}));
-      exit=true;
-    }
+    case "add" : addTask(taskList); break;
+    case "list" : listTasks(taskList); break;
+    case "check" : checkTask(taskList); break;
+    case "remove" : removeTask(taskList); break;
+    case "pomodoro": pomoTask(taskList); break;
+    default : exit=true;
   }
 }
